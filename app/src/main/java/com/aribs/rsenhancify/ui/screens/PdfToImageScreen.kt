@@ -70,7 +70,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private enum class Dpi(val label: String, val dpi: Int) { LOW("Small · 100"), MED("Good · 150"), HIGH("Sharp · 300") }
+private enum class Dpi(val label: String, val dpi: Int) { LOW("Small · 100", 100), MED("Good · 150", 150), HIGH("Sharp · 300", 300) }
 
 @Composable
 fun PdfToImageScreen(onBack: () -> Unit) {
