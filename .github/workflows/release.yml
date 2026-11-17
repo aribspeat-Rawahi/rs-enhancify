@@ -1,0 +1,135 @@
+name: Build & Release APK
+
+# Every push to main = new APK.
+#  - With signing secrets + RELEASES_REPO_TOKEN: signed release in the public releases repo (+ latest.json)
+#  - Without them: debug-signed TEST build published as a pre-release in this (private) repo
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  RELEASES_REPO: aribspeat-Rawahi/rs-enhancify-releases
+  APP: RsEnhancify
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Compute version
+        id: ver
+        run: |
+          CODE=$((100 + GITHUB_RUN_NUMBER))
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "name=1.0.${CODE}" >> "$GITHUB_OUTPUT"
+
+      - name: Decode signing keystore (optional)
+        id: sign
+        env:
+          RS_KEYSTORE_BASE64: ${{ secrets.RS_KEYSTORE_BASE64 }}
+          T: ${{ secrets.RELEASES_REPO_TOKEN }}
+        run: |
+          if [ -n "$RS_KEYSTORE_BASE64" ]; then
+            echo "$RS_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/rs-release.keystore"
+            echo "RS_KEYSTORE_PATH=$RUNNER_TEMP/rs-release.keystore" >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::No signing secret - building debug-signed TEST APK"
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -n "$RS_KEYSTORE_BASE64" ] && [ -n "$T" ]; then echo "public=true" >> "$GITHUB_OUTPUT"; else echo "public=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Build APK
+        env:
+          RS_KEYSTORE_PASSWORD: ${{ secrets.RS_KEYSTORE_PASSWORD }}
+          RS_KEY_ALIAS: ${{ secrets.RS_KEY_ALIAS }}
+          RS_KEY_PASSWORD: ${{ secrets.RS_KEY_PASSWORD }}
+          SIGNED: ${{ steps.sign.outputs.signed }}
+        run: |
+          set -o pipefail
+          chmod +x gradlew
+          if [ "$SIGNED" = "true" ]; then TASK=assembleRelease; DIR=release; else TASK=assembleDebug; DIR=debug; fi
+          ./gradlew --no-daemon --stacktrace $TASK \
+            -PrsVersionName=${{ steps.ver.outputs.name }} \
+            -PrsVersionCode=${{ steps.ver.outputs.code }} 2>&1 | tee build.log
+          mkdir -p dist
+          APK=$(ls app/build/outputs/apk/$DIR/*.apk | head -1)
+          SUFFIX=$([ "$SIGNED" = "true" ] && echo "" || echo "-test")
+          cp "$APK" "dist/${APP}-${{ steps.ver.outputs.name }}${SUFFIX}.apk"
+          ls -la dist
+
+      - name: Write latest.json
+        env:
+          NAME: ${{ steps.ver.outputs.name }}
+          CODE: ${{ steps.ver.outputs.code }}
+        run: |
+          APK=$(ls dist/*.apk | head -1)
+          FILE=$(basename "$APK")
+          SHA=$(sha256sum "$APK" | cut -d' ' -f1)
+          NOTES=$(git log -1 --pretty=%s | head -c 300)
+          URL="https://github.com/${RELEASES_REPO}/releases/download/v${NAME}/${FILE}"
+          jq -n --argjson code "$CODE" --arg name "$NAME" --arg url "$URL" --arg sha "$SHA" --arg notes "$NOTES" \
+            '{versionCode:$code, versionName:$name, apkUrl:$url, sha256:$sha, notes:$notes}' > dist/latest.json
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.APP }}-${{ steps.ver.outputs.name }}
+          path: dist/*
+
+      - name: Publish signed release (public releases repo)
+        if: steps.sign.outputs.public == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          repository: ${{ env.RELEASES_REPO }}
+          token: ${{ secrets.RELEASES_REPO_TOKEN }}
+          tag_name: v${{ steps.ver.outputs.name }}
+          name: Rs Enhancify v${{ steps.ver.outputs.name }}
+          body: ${{ github.event.head_commit.message || 'Manual release' }}
+          make_latest: true
+          files: |
+            dist/*.apk
+            dist/latest.json
+
+      - name: Publish test build (this repo)
+        if: steps.sign.outputs.public != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.name }}
+          name: Rs Enhancify v${{ steps.ver.outputs.name }} (test)
+          body: ${{ github.event.head_commit.message || 'Manual build' }}
+          prerelease: true
+          files: dist/*.apk
+
+      # Build log + status on branch "ci-logs" so problems can be diagnosed without the web UI
+      - name: Push CI log
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATUS: ${{ job.status }}
+        run: |
+          mkdir -p /tmp/cilog && cd /tmp/cilog
+          git init -q && git checkout -q -b ci-logs
+          [ -f "$GITHUB_WORKSPACE/build.log" ] && tail -c 400000 "$GITHUB_WORKSPACE/build.log" > build.log || echo "no build log" > build.log
+          ls -la "$GITHUB_WORKSPACE/dist" > dist.txt 2>&1 || true
+          echo "run=${GITHUB_RUN_NUMBER} sha=${GITHUB_SHA} status=${STATUS} version=${{ steps.ver.outputs.name }} public=${{ steps.sign.outputs.public }}" > status.txt
+          git add -A
+          git -c user.name=ci -c user.email=ci@users.noreply.github.com commit -qm "CI run ${GITHUB_RUN_NUMBER}: ${STATUS}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ci-logs
