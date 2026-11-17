@@ -77,8 +77,9 @@ import kotlin.math.max
 import kotlin.math.roundToInt
 
 private enum class Quality(val label: String, val maxInput: Int) {
-    FAST("Fast", 512),
-    BEST("Best", 1024)
+    // Multiples of the 224 px useful tile area -> no wasted partial tiles
+    FAST("Fast", 448),   // 2x2 tiles
+    BEST("Best", 896)    // 4x4 tiles
 }
 
 private enum class OutFormat(val label: String) { JPG("JPG"), PNG("PNG") }
@@ -259,8 +260,8 @@ fun EnhanceScreen(onBack: () -> Unit) {
             SectionLabel("Quality")
             GlassSegmented(Quality.entries.map { it to it.label }, quality, enabled = !running) { quality = it; clearResult() }
             Text(
-                if (quality == Quality.FAST) "Works on input up to 512 px — quick, good for most photos."
-                else "Works on input up to 1024 px — sharper detail, takes longer.",
+                if (quality == Quality.FAST) "Processes up to 448 px of detail — quick, good for most photos."
+                else "Processes up to 896 px of detail — sharper, takes about 4× longer.",
                 color = GlassColors.TextMuted, fontSize = 12.sp, modifier = Modifier.padding(start = 4.dp, top = 6.dp)
             )
             VGap(10.dp)
