@@ -66,7 +66,8 @@ jobs:
         run: |
           set -o pipefail
           chmod +x gradlew
-          if [ "$SIGNED" = "true" ]; then TASK=assembleRelease; DIR=release; else TASK=assembleDebug; DIR=debug; fi
+          # Unsigned runs also build the (unsigned) release variant to verify R8/minify works
+          if [ "$SIGNED" = "true" ]; then TASK=assembleRelease; DIR=release; else TASK="assembleDebug assembleRelease"; DIR=debug; fi
           ./gradlew --no-daemon --stacktrace $TASK \
             -PrsVersionName=${{ steps.ver.outputs.name }} \
             -PrsVersionCode=${{ steps.ver.outputs.code }} 2>&1 | tee build.log
@@ -128,7 +129,7 @@ jobs:
           mkdir -p /tmp/cilog && cd /tmp/cilog
           git init -q && git checkout -q -b ci-logs
           [ -f "$GITHUB_WORKSPACE/build.log" ] && tail -c 400000 "$GITHUB_WORKSPACE/build.log" > build.log || echo "no build log" > build.log
-          ls -la "$GITHUB_WORKSPACE/dist" > dist.txt 2>&1 || true
+          ls -la "$GITHUB_WORKSPACE/dist" "$GITHUB_WORKSPACE"/app/build/outputs/apk/*/ > dist.txt 2>&1 || true
           for a in "$GITHUB_WORKSPACE"/dist/*.apk; do [ -f "$a" ] && unzip -lv "$a" | sort -k3 -n -r | head -60 > apk_contents.txt; done
           echo "run=${GITHUB_RUN_NUMBER} sha=${GITHUB_SHA} status=${STATUS} version=${{ steps.ver.outputs.name }} public=${{ steps.sign.outputs.public }}" > status.txt
           git add -A

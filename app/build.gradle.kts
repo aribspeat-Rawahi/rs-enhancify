@@ -37,7 +37,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8: strips unused code (material icons, bouncycastle) -> much smaller APK
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (!keystorePath.isNullOrBlank()) {
                 signingConfig = signingConfigs.getByName("release")
             }
@@ -55,7 +58,15 @@ android {
 
     packaging {
         resources {
-            excludes += listOf("META-INF/DEPENDENCIES", "META-INF/LICENSE*", "META-INF/NOTICE*")
+            excludes += listOf(
+                "META-INF/DEPENDENCIES", "META-INF/LICENSE*", "META-INF/NOTICE*",
+                // Post-quantum crypto tables from bouncycastle (not used for PDF decryption)
+                "org/bouncycastle/pqc/**"
+            )
+        }
+        jniLibs {
+            // Compress native libs inside the APK -> smaller download
+            useLegacyPackaging = true
         }
     }
 
