@@ -1,6 +1,6 @@
 # CLAUDE.md — Rs Enhancify
 
-Offline Android app: AI image upscaler (Real-ESRGAN), JPG→PDF, PDF→JPG, PDF→Word. Native Kotlin + Jetpack Compose, glassmorphism UI. No network access at all (INTERNET permission is removed in the manifest — keep it that way).
+Offline Android app: AI image upscaler (Real-ESRGAN), JPG→PDF, PDF→JPG, PDF→Word. Native Kotlin + Jetpack Compose, glassmorphism UI. All processing is on-device. Network is used ONLY by the in-app updater (`update/`) — never send user files or analytics anywhere.
 
 ## Working with the owner
 - Explain in **Bengali (বাংলা)**; code, commands, paths and technical terms in English. Code comments in English.
@@ -26,6 +26,8 @@ app/src/main/java/com/aribs/rsenhancify/
   ui/components/Glass.kt     # glass design system (background, cards, buttons, segmented, progress)
   ui/screens/*.kt            # Home, Enhance, ImageToPdf, PdfToImage, PdfToWord
   util/Files.kt              # decode (EXIF-aware), MediaStore save, open/share
+  update/AppUpdater.kt       # latest.json -> in-app download -> sha256 -> system installer (GitHub hosts only, redirects checked)
+  update/UpdateDialog.kt     # glass update prompt; checks every launch, "Later" = ask again next launch
 scripts/convert_model.py     # .pth -> .tflite (no torch needed): python3 convert_model.py realesr-general-x4v3.pth out.tflite 256
 ```
 Outputs: images → `Pictures/Rs Enhancify`, PDF/DOCX → `Download/Rs Enhancify`.
@@ -37,9 +39,12 @@ Outputs: images → `Pictures/Rs Enhancify`, PDF/DOCX → `Download/Rs Enhancify
 
 ## Build & release
 - Every push to `main` builds an APK (`.github/workflows/release.yml`); versionCode = 100 + run number.
-- Signed (secrets present) → public `aribspeat-Rawahi/rs-enhancify-releases` + `latest.json`. No secrets → debug-signed test pre-release in this repo.
+- Signed (secrets present) → public `aribspeat-Rawahi/rs-enhancify-releases` + `latest.json` (read by the in-app updater via `BuildConfig.UPDATE_MANIFEST_URL`). Commit subject = "What's new" text users see. No secrets → debug-signed test pre-release in this repo.
 - Build log + status are force-pushed to branch `ci-logs` after every run.
 - Never commit keystores, local.properties, APKs. Never change the signing key once users installed signed builds.
+
+## Logo
+Adaptive icon = `drawable/ic_launcher_background.xml` (gradient) + `ic_launcher_foreground.xml` (glass photo card + AI sparkle). `AppLogo()` in HomeScreen draws the same in-app.
 
 ## Licenses
 Real-ESRGAN weights: BSD-3-Clause (xinntao/Real-ESRGAN). PDFBox: Apache-2.0. ML Kit: Google APIs ToS.

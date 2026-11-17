@@ -16,6 +16,12 @@ android {
         versionCode = (project.findProperty("rsVersionCode") as String?)?.toIntOrNull() ?: 1
         versionName = (project.findProperty("rsVersionName") as String?) ?: "1.0"
 
+        buildConfigField(
+            "String",
+            "UPDATE_MANIFEST_URL",
+            "\"https://github.com/aribspeat-Rawahi/rs-enhancify-releases/releases/latest/download/latest.json\""
+        )
+
         ndk {
             // Real phones only (keeps APK small). x86 emulators are not supported.
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
@@ -92,6 +98,7 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
     // On-device AI upscaling (Real-ESRGAN, TFLite). GPU with CPU fallback.

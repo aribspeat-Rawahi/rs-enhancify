@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Verified update APK handed to the package installer -->
+    <cache-path name="app_updates" path="updates/" />
+</paths>

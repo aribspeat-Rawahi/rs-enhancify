@@ -87,8 +87,9 @@ jobs:
           SHA=$(sha256sum "$APK" | cut -d' ' -f1)
           NOTES=$(git log -1 --pretty=%s | head -c 300)
           URL="https://github.com/${RELEASES_REPO}/releases/download/v${NAME}/${FILE}"
-          jq -n --argjson code "$CODE" --arg name "$NAME" --arg url "$URL" --arg sha "$SHA" --arg notes "$NOTES" \
-            '{versionCode:$code, versionName:$name, apkUrl:$url, sha256:$sha, notes:$notes}' > dist/latest.json
+          SIZE=$(stat -c %s "$APK")
+          jq -n --argjson code "$CODE" --arg name "$NAME" --arg url "$URL" --arg sha "$SHA" --arg notes "$NOTES" --argjson size "$SIZE" \
+            '{versionCode:$code, versionName:$name, apkUrl:$url, sha256:$sha, notes:$notes, size:$size}' > dist/latest.json
 
       - uses: actions/upload-artifact@v4
         with:

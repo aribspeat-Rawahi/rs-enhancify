@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -24,6 +25,7 @@ import com.aribs.rsenhancify.ui.screens.HomeScreen
 import com.aribs.rsenhancify.ui.screens.ImageToPdfScreen
 import com.aribs.rsenhancify.ui.screens.PdfToImageScreen
 import com.aribs.rsenhancify.ui.screens.PdfToWordScreen
+import com.aribs.rsenhancify.update.AppUpdatePrompt
 
 enum class Screen { HOME, ENHANCE, IMAGE_TO_PDF, PDF_TO_IMAGE, PDF_TO_WORD }
 
@@ -49,6 +51,7 @@ fun App() {
         )
     ) {
         var screen by rememberSaveable { mutableStateOf(Screen.HOME) }
+        var updateCheck by rememberSaveable { mutableIntStateOf(0) }
         BackHandler(enabled = screen != Screen.HOME) { screen = Screen.HOME }
         GlassBackground {
             AnimatedContent(
@@ -58,13 +61,15 @@ fun App() {
             ) { s ->
                 val back = { screen = Screen.HOME }
                 when (s) {
-                    Screen.HOME -> HomeScreen(onOpen = { screen = it })
+                    Screen.HOME -> HomeScreen(onOpen = { screen = it }, onCheckUpdates = { updateCheck++ })
                     Screen.ENHANCE -> EnhanceScreen(onBack = back)
                     Screen.IMAGE_TO_PDF -> ImageToPdfScreen(onBack = back)
                     Screen.PDF_TO_IMAGE -> PdfToImageScreen(onBack = back)
                     Screen.PDF_TO_WORD -> PdfToWordScreen(onBack = back)
                 }
             }
+            // Checks GitHub on every launch; shows a prompt only when a newer version exists
+            AppUpdatePrompt(manualTrigger = updateCheck)
         }
     }
 }

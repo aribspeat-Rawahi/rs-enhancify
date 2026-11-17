@@ -2,13 +2,19 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <!-- glass tile -->
-    <path android:fillColor="#33FFFFFF" android:strokeColor="#80FFFFFF" android:strokeWidth="1.5"
-        android:pathData="M38,34h32a6,6 0,0 1,6 6v28a6,6 0,0 1,-6 6h-32a6,6 0,0 1,-6 -6v-28a6,6 0,0 1,6 -6z" />
-    <!-- big sparkle -->
+    <!-- glass photo card -->
+    <path
+        android:fillColor="#2EFFFFFF"
+        android:strokeColor="#BFFFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M40,37h28a7,7 0,0 1,7 7v22a7,7 0,0 1,-7 7h-28a7,7 0,0 1,-7 -7v-22a7,7 0,0 1,7 -7z" />
+    <!-- mountains -->
+    <path android:fillColor="#EBFFFFFF" android:pathData="M37,68 L47,55 L54,63 L59,58 L71,68 Z" />
+    <!-- sun -->
+    <path android:fillColor="#FFFFE66D" android:pathData="M58,47m-3.5,0a3.5,3.5 0,1 1,7 0a3.5,3.5 0,1 1,-7 0" />
+    <!-- AI sparkle -->
     <path android:fillColor="#FFFFFFFF"
-        android:pathData="M54,40 C55.2,48 57,50.8 64,52 C57,53.2 55.2,56 54,64 C52.8,56 51,53.2 44,52 C51,50.8 52.8,48 54,40z" />
-    <!-- small sparkle -->
+        android:pathData="M73,27 C74,34.5 76.5,37 84,38 C76.5,39 74,41.5 73,49 C72,41.5 69.5,39 62,38 C69.5,37 72,34.5 73,27 Z" />
     <path android:fillColor="#FFFFE66D"
-        android:pathData="M66,60 C66.5,63.2 67.3,64.3 70,65 C67.3,65.7 66.5,66.8 66,70 C65.5,66.8 64.7,65.7 62,65 C64.7,64.3 65.5,63.2 66,60z" />
+        android:pathData="M35,64 C35.5,67.5 36.5,68.5 40,69 C36.5,69.5 35.5,70.5 35,74 C34.5,70.5 33.5,69.5 30,69 C33.5,68.5 34.5,67.5 35,64 Z" />
 </vector>
