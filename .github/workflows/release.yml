@@ -45,6 +45,10 @@ jobs:
         id: sign
         env:
           RS_KEYSTORE_BASE64: ${{ secrets.RS_KEYSTORE_BASE64 }}
+          RS_KEYSTORE_PASSWORD: ${{ secrets.RS_KEYSTORE_PASSWORD }}
+          RS_KEY_ALIAS: ${{ secrets.RS_KEY_ALIAS }}
+          RS_KEY_PASSWORD: ${{ secrets.RS_KEY_PASSWORD }}
+          RELEASES_REPO_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
           T: ${{ secrets.RELEASES_REPO_TOKEN }}
         run: |
           if [ -n "$RS_KEYSTORE_BASE64" ]; then
@@ -56,6 +60,10 @@ jobs:
             echo "signed=false" >> "$GITHUB_OUTPUT"
           fi
           if [ -n "$RS_KEYSTORE_BASE64" ] && [ -n "$T" ]; then echo "public=true" >> "$GITHUB_OUTPUT"; else echo "public=false" >> "$GITHUB_OUTPUT"; fi
+          # Diagnostics (never prints values): which secrets this run can see
+          for n in RS_KEYSTORE_BASE64 RS_KEYSTORE_PASSWORD RS_KEY_ALIAS RS_KEY_PASSWORD RELEASES_REPO_TOKEN; do
+            if [ -n "${!n}" ]; then echo "$n=present"; else echo "$n=MISSING"; fi
+          done | tee "$RUNNER_TEMP/secrets-check.txt"
 
       - name: Build APK
         env:
@@ -131,6 +139,7 @@ jobs:
           git init -q && git checkout -q -b ci-logs
           [ -f "$GITHUB_WORKSPACE/build.log" ] && tail -c 400000 "$GITHUB_WORKSPACE/build.log" > build.log || echo "no build log" > build.log
           ls -la "$GITHUB_WORKSPACE/dist" "$GITHUB_WORKSPACE"/app/build/outputs/apk/*/ > dist.txt 2>&1 || true
+          cp "$RUNNER_TEMP/secrets-check.txt" . 2>/dev/null || true
           for a in "$GITHUB_WORKSPACE"/dist/*.apk; do [ -f "$a" ] && unzip -lv "$a" | sort -k3 -n -r | head -60 > apk_contents.txt; done
           echo "run=${GITHUB_RUN_NUMBER} sha=${GITHUB_SHA} status=${STATUS} version=${{ steps.ver.outputs.name }} public=${{ steps.sign.outputs.public }}" > status.txt
           git add -A
