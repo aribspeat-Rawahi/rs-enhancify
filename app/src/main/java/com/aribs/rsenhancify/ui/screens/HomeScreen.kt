@@ -1,5 +1,6 @@
 package com.aribs.rsenhancify.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,9 +34,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aribs.rsenhancify.R
 import com.aribs.rsenhancify.Screen
 import com.aribs.rsenhancify.ui.components.GlassCard
 import com.aribs.rsenhancify.ui.components.GlassColors
@@ -70,8 +73,18 @@ fun HomeScreen(onOpen: (Screen) -> Unit) {
             .padding(horizontal = 20.dp)
     ) {
         Spacer(Modifier.height(28.dp))
-        Text("Rs Enhancify", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Bold)
-        Text("AI photo & PDF studio", color = GlassColors.TextSecondary, fontSize = 15.sp)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Image(
+                painter = painterResource(R.drawable.ic_logo),
+                contentDescription = null, // decorative: app name is right next to it
+                modifier = Modifier.size(56.dp)
+            )
+            Spacer(Modifier.width(14.dp))
+            Column {
+                Text("Rs Enhancify", color = Color.White, fontSize = 34.sp, fontWeight = FontWeight.Bold)
+                Text("AI photo & PDF studio", color = GlassColors.TextSecondary, fontSize = 15.sp)
+            }
+        }
         Spacer(Modifier.height(14.dp))
         Row(
             Modifier
