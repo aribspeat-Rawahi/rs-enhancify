@@ -25,7 +25,6 @@ import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.PictureAsPdf
-import androidx.compose.material.icons.rounded.SystemUpdate
 import androidx.compose.material.icons.rounded.WifiOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -57,7 +56,7 @@ private data class Tool(
 )
 
 @Composable
-fun HomeScreen(onOpen: (Screen) -> Unit, onCheckUpdates: () -> Unit) {
+fun HomeScreen(onOpen: (Screen) -> Unit) {
     val tools = listOf(
         Tool(Screen.ENHANCE, "AI Enhance", "Upscale 2x / 4x and sharpen blurry photos", Icons.Rounded.AutoAwesome,
             listOf(GlassColors.Violet, GlassColors.Pink)),
@@ -125,20 +124,9 @@ fun HomeScreen(onOpen: (Screen) -> Unit, onCheckUpdates: () -> Unit) {
             }
         }
         Spacer(Modifier.height(6.dp))
-        Row(
-            Modifier
-                .glass(RoundedCornerShape(50))
-                .clickable(onClick = onCheckUpdates)
-                .padding(horizontal = 14.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Rounded.SystemUpdate, null, tint = GlassColors.Cyan, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(6.dp))
-            Text("Check for updates · v${BuildConfig.VERSION_NAME}", color = GlassColors.TextSecondary, fontSize = 12.sp)
-        }
         Spacer(Modifier.height(12.dp))
         Text(
-            "Saved to Pictures/Rs Enhancify and Download/Rs Enhancify",
+            "Saved to Pictures/Rs Enhancify and Download/Rs Enhancify · v${BuildConfig.VERSION_NAME}",
             color = GlassColors.TextMuted, fontSize = 12.sp,
             modifier = Modifier.padding(bottom = 24.dp)
         )

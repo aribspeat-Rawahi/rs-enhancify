@@ -27,7 +27,7 @@ app/src/main/java/com/aribs/rsenhancify/
   ui/screens/*.kt            # Home, Enhance, ImageToPdf, PdfToImage, PdfToWord
   util/Files.kt              # decode (EXIF-aware), MediaStore save, open/share
   update/AppUpdater.kt       # latest.json -> in-app download -> sha256 -> system installer (GitHub hosts only, redirects checked)
-  update/UpdateDialog.kt     # glass update prompt; checks every launch, "Later" = ask again next launch
+  update/UpdateDialog.kt     # silent background check (launch, back online, resume >1h); prompt only when newer: "Upgrade now"/"Later" (Later = hide until next launch). No manual check button.
 scripts/convert_model.py     # .pth -> .tflite (no torch needed): python3 convert_model.py realesr-general-x4v3.pth out.tflite 256
 ```
 Outputs: images → `Pictures/Rs Enhancify`, PDF/DOCX → `Download/Rs Enhancify`.

@@ -4,6 +4,7 @@
 
     <!-- Network is used ONLY to check for and download app updates (GitHub). User files never leave the phone. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
     <application

@@ -1,6 +1,9 @@
 package com.aribs.rsenhancify.update
 
 import android.content.ActivityNotFoundException
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,14 +56,13 @@ import com.aribs.rsenhancify.ui.components.GlassColors
 import com.aribs.rsenhancify.ui.components.GlassOutlineButton
 import com.aribs.rsenhancify.ui.components.glass
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
 
 private sealed interface UpdateUiState {
     data object Idle : UpdateUiState
-    data object Checking : UpdateUiState
-    data object UpToDate : UpdateUiState
     data class Available(val info: UpdateInfo) : UpdateUiState
     data class Downloading(val info: UpdateInfo, val progress: Float) : UpdateUiState
     data class NeedsPermission(val info: UpdateInfo, val apk: File) : UpdateUiState
@@ -67,37 +70,51 @@ private sealed interface UpdateUiState {
     data class Failed(val message: String, val info: UpdateInfo?) : UpdateUiState
 }
 
+/** Process-wide update bookkeeping (survives screen changes, resets when the app is restarted). */
+private object UpdateSession {
+    /** Version the user answered "Later" to in this app session — not shown again until next launch. */
+    var dismissedVersion = -1
+    var lastCheckAt = 0L
+    var checking = false
+}
+
+private const val RECHECK_ON_RESUME_MS = 60 * 60 * 1000L // re-check when returning to the app after 1 h
+private const val MIN_CHECK_GAP_MS = 30 * 1000L          // debounce network flaps
+
 /**
- * Update host. Checks silently on every app launch (only shows UI if an update exists or a
- * manual check was requested). "Later" just closes it — the prompt comes back next launch.
- * [manualTrigger]: increment to run a visible check ("Check for updates").
+ * Background update watcher. Silently checks GitHub:
+ *  - when the app starts,
+ *  - whenever the phone comes (back) online while the app is open,
+ *  - when the app is resumed and the last check is older than 1 hour.
+ * Shows UI only when a newer version is found: "Upgrade now" / "Later".
+ * "Later" hides that version for the rest of this app session; it is offered again on next launch.
  */
 @Composable
-fun AppUpdatePrompt(manualTrigger: Int = 0) {
+fun AppUpdatePrompt() {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<UpdateUiState>(UpdateUiState.Idle) }
     var downloadJob by remember { mutableStateOf<Job?>(null) }
 
-    fun startCheck(silent: Boolean) {
-        state = if (silent) UpdateUiState.Idle else UpdateUiState.Checking
+    fun checkInBackground(force: Boolean = false) {
+        val now = System.currentTimeMillis()
+        if (UpdateSession.checking || state !is UpdateUiState.Idle) return
+        if (!force && now - UpdateSession.lastCheckAt < MIN_CHECK_GAP_MS) return
+        UpdateSession.checking = true
         scope.launch {
-            val next = try {
+            try {
                 val info = AppUpdater.fetchNewerVersion()
-                when {
-                    info != null -> UpdateUiState.Available(info)
-                    silent -> UpdateUiState.Idle
-                    else -> UpdateUiState.UpToDate
+                UpdateSession.lastCheckAt = System.currentTimeMillis()
+                if (info != null && info.versionCode != UpdateSession.dismissedVersion && state is UpdateUiState.Idle) {
+                    state = UpdateUiState.Available(info)
                 }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                // Offline or server problem: stay quiet on automatic checks
-                if (silent) UpdateUiState.Idle
-                else UpdateUiState.Failed("Could not check for updates. Please check your internet connection.", null)
+                // Offline / server problem: stay silent, the next online event retries
+            } finally {
+                UpdateSession.checking = false
             }
-            // Don't interrupt a download/install the user already started
-            if (state is UpdateUiState.Idle || state is UpdateUiState.Checking) state = next
         }
     }
 
@@ -135,38 +152,54 @@ fun AppUpdatePrompt(manualTrigger: Int = 0) {
 
     LaunchedEffect(Unit) {
         AppUpdater.cleanup(context) // leftover APK from a previous (installed) update
-        startCheck(silent = true)
+        checkInBackground(force = true)
     }
-    LaunchedEffect(manualTrigger) { if (manualTrigger > 0) startCheck(silent = false) }
 
-    // Coming back from the "Install unknown apps" settings screen: continue automatically
+    // Phone came online (or switched network) while the app is open -> check again
+    DisposableEffect(Unit) {
+        val cm = context.getSystemService(ConnectivityManager::class.java)
+        var online = false
+        val callback = object : ConnectivityManager.NetworkCallback() {
+            override fun onCapabilitiesChanged(network: Network, caps: NetworkCapabilities) {
+                val nowOnline = caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                    caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                if (nowOnline && !online) scope.launch(Dispatchers.Main) { checkInBackground() }
+                online = nowOnline
+            }
+
+            override fun onLost(network: Network) {
+                online = false
+            }
+        }
+        val registered = runCatching { cm?.registerDefaultNetworkCallback(callback) }.isSuccess && cm != null
+        onDispose { if (registered) runCatching { cm?.unregisterNetworkCallback(callback) } }
+    }
+
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         val s = state
-        if (s is UpdateUiState.NeedsPermission && AppUpdater.canInstall(context)) install(s.info, s.apk)
+        // Coming back from the "Install unknown apps" settings screen: continue automatically
+        if (s is UpdateUiState.NeedsPermission && AppUpdater.canInstall(context)) {
+            install(s.info, s.apk)
+        } else if (System.currentTimeMillis() - UpdateSession.lastCheckAt > RECHECK_ON_RESUME_MS) {
+            checkInBackground()
+        }
     }
 
-    val close = { state = UpdateUiState.Idle }
+    fun later(info: UpdateInfo?) {
+        if (info != null) UpdateSession.dismissedVersion = info.versionCode
+        state = UpdateUiState.Idle
+    }
+
 
     when (val s = state) {
         UpdateUiState.Idle -> Unit
 
-        UpdateUiState.Checking -> GlassDialog(Icons.Rounded.SystemUpdate, "Checking for updates…", onDismiss = close) {
-            Progress(null)
-        }
-
-        UpdateUiState.UpToDate -> GlassDialog(
-            Icons.Rounded.SystemUpdate, "You're up to date", onDismiss = close,
-            secondary = "OK" to close
-        ) {
-            Body("Rs Enhancify ${BuildConfig.VERSION_NAME} is the latest version.")
-        }
-
         is UpdateUiState.Available -> GlassDialog(
-            Icons.Rounded.SystemUpdate, "Update available", onDismiss = close,
-            primary = Triple("Update now", Icons.Rounded.Download) { startDownload(s.info) },
-            secondary = "Later" to close
+            Icons.Rounded.SystemUpdate, "New version found", onDismiss = { later(s.info) },
+            primary = Triple("Upgrade now", Icons.Rounded.Download) { startDownload(s.info) },
+            secondary = "Later" to { later(s.info) }
         ) {
-            Body("Version ${s.info.versionName} is ready (you have ${BuildConfig.VERSION_NAME}).")
+            Body("Rs Enhancify ${s.info.versionName} is available. You have ${BuildConfig.VERSION_NAME}.")
             if (s.info.sizeBytes > 0) Body("Download size: ${"%.1f".format(s.info.sizeBytes / 1_048_576.0)} MB")
             if (s.info.notes.isNotBlank()) {
                 Spacer(Modifier.height(4.dp))
@@ -188,7 +221,7 @@ fun AppUpdatePrompt(manualTrigger: Int = 0) {
         }
 
         is UpdateUiState.NeedsPermission -> GlassDialog(
-            Icons.Rounded.Settings, "Allow app updates", onDismiss = close,
+            Icons.Rounded.Settings, "Allow app updates", onDismiss = { later(s.info) },
             primary = Triple("Open settings", Icons.Rounded.Settings) {
                 try {
                     AppUpdater.openInstallPermissionSettings(context)
@@ -196,24 +229,24 @@ fun AppUpdatePrompt(manualTrigger: Int = 0) {
                     state = UpdateUiState.Failed("Could not open settings", s.info)
                 }
             },
-            secondary = "Later" to close
+            secondary = "Later" to { later(s.info) }
         ) {
             Body("One-time step: Android needs your permission for Rs Enhancify to install its own updates.")
             Body("Turn on \"Allow from this source\", then come back — installation continues automatically.")
         }
 
         is UpdateUiState.ReadyToInstall -> GlassDialog(
-            Icons.Rounded.InstallMobile, "Ready to install", onDismiss = close,
+            Icons.Rounded.InstallMobile, "Ready to install", onDismiss = { later(s.info) },
             primary = Triple("Install", Icons.Rounded.InstallMobile) { install(s.info, s.apk) },
-            secondary = "Later" to close
+            secondary = "Later" to { later(s.info) }
         ) {
             Body("Version ${s.info.versionName} has been downloaded and verified.")
         }
 
         is UpdateUiState.Failed -> GlassDialog(
-            Icons.Rounded.SystemUpdate, "Update failed", onDismiss = close,
+            Icons.Rounded.SystemUpdate, "Update failed", onDismiss = { later(s.info) },
             primary = s.info?.let { info -> Triple("Retry", Icons.Rounded.Download) { startDownload(info) } },
-            secondary = "Close" to close
+            secondary = "Later" to { later(s.info) }
         ) {
             Body(s.message)
         }
