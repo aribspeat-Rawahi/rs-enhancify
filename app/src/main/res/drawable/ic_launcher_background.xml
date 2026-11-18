@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "RS Doc Glass" logo background: violet -> blue diagonal gradient -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp" android:height="108dp"
@@ -6,19 +7,10 @@
     <path android:pathData="M0,0h108v108h-108z">
         <aapt:attr name="android:fillColor">
             <gradient android:type="linear"
-                android:startX="0" android:startY="0" android:endX="108" android:endY="108">
-                <item android:offset="0" android:color="#FF8B3DFF" />
-                <item android:offset="0.5" android:color="#FF4F46E5" />
-                <item android:offset="1" android:color="#FF06B6D4" />
-            </gradient>
-        </aapt:attr>
-    </path>
-    <path android:pathData="M0,0h108v108h-108z">
-        <aapt:attr name="android:fillColor">
-            <gradient android:type="radial"
-                android:centerX="40" android:centerY="34" android:gradientRadius="46">
-                <item android:offset="0" android:color="#8CFF7AD9" />
-                <item android:offset="1" android:color="#00FF7AD9" />
+                android:startX="18" android:startY="18" android:endX="90" android:endY="90">
+                <item android:offset="0" android:color="#FF7A3BEE" />
+                <item android:offset="0.5" android:color="#FF4F4FEC" />
+                <item android:offset="1" android:color="#FF2B5FEB" />
             </gradient>
         </aapt:attr>
     </path>

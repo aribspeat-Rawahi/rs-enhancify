@@ -44,7 +44,7 @@ Outputs: images → `Pictures/Rs Enhancify`, PDF/DOCX → `Download/Rs Enhancify
 - Never commit keystores, local.properties, APKs. Never change the signing key once users installed signed builds.
 
 ## Logo
-Adaptive icon = `drawable/ic_launcher_background.xml` (gradient) + `ic_launcher_foreground.xml` (glass photo card + AI sparkle). `AppLogo()` in HomeScreen draws the same in-app.
+"RS Doc Glass" (owner's chosen design). Adaptive icon = `drawable/ic_launcher_background.xml` (violet→blue gradient) + `ic_launcher_foreground.xml` (two glass pages, folded corner, "RS" in Unbounded Black as outlined path, cyan sparkle). `AppLogo()` in HomeScreen draws the same in-app.
 
 ## Licenses
 Real-ESRGAN weights: BSD-3-Clause (xinntao/Real-ESRGAN). PDFBox: Apache-2.0. ML Kit: Google APIs ToS.

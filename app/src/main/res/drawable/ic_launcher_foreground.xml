@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- "RS Doc Glass" logo: two glass pages, folded corner, "RS" (Unbounded Black, outlined) and an AI sparkle -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <!-- glass photo card -->
+    <!-- back page (tilted) -->
+    <group android:rotation="-8" android:pivotX="50.25" android:pivotY="52.5">
+        <path
+            android:fillColor="#1AFFFFFF"
+            android:strokeColor="#59FFFFFF"
+            android:strokeWidth="0.6"
+            android:pathData="M38.85,32.1H61.65A4.5,4.5 0,0 1,66.15 36.6V68.4A4.5,4.5 0,0 1,61.65 72.9H38.85A4.5,4.5 0,0 1,34.35 68.4V36.6A4.5,4.5 0,0 1,38.85 32.1Z" />
+    </group>
+    <!-- front page -->
     <path
-        android:fillColor="#2EFFFFFF"
-        android:strokeColor="#BFFFFFFF"
-        android:strokeWidth="2"
-        android:pathData="M40,37h28a7,7 0,0 1,7 7v22a7,7 0,0 1,-7 7h-28a7,7 0,0 1,-7 -7v-22a7,7 0,0 1,7 -7z" />
-    <!-- mountains -->
-    <path android:fillColor="#EBFFFFFF" android:pathData="M37,68 L47,55 L54,63 L59,58 L71,68 Z" />
-    <!-- sun -->
-    <path android:fillColor="#FFFFE66D" android:pathData="M58,47m-3.5,0a3.5,3.5 0,1 1,7 0a3.5,3.5 0,1 1,-7 0" />
+        android:fillColor="#42FFFFFF"
+        android:strokeColor="#99FFFFFF"
+        android:strokeWidth="0.6"
+        android:pathData="M38,33.3H62.25L73.35,44.4V71.5A5,5 0,0 1,68.35 76.5H38A5,5 0,0 1,33 71.5V38.3A5,5 0,0 1,38 33.3Z" />
+    <!-- folded corner -->
+    <path android:fillColor="#66FFFFFF" android:pathData="M62.25,33.3V41.75A2.5,2.5 0,0 0,64.75 44.25H73.35Z" />
+    <!-- RS -->
+    <path android:fillColor="#FFFFFFFF" android:pathData="M42.47 55.43H46.65Q47.28 55.43 47.63 55.13Q47.98 54.83 47.98 54.27Q47.98 53.7 47.63 53.4Q47.28 53.1 46.65 53.1H41.87L43.8 51.18V62.55H39.51V50.1H47.32Q48.81 50.1 49.93 50.62Q51.05 51.15 51.67 52.08Q52.3 53.01 52.3 54.27Q52.3 55.49 51.67 56.43Q51.05 57.37 49.93 57.89Q48.81 58.4 47.32 58.4H42.47ZM43.93 56.72H48.66L52.79 62.55H47.9ZM53.64 58.45H57.99Q58.06 58.81 58.37 59.07Q58.69 59.33 59.23 59.47Q59.78 59.61 60.55 59.61Q61.54 59.61 62.1 59.41Q62.65 59.21 62.65 58.77Q62.65 58.47 62.34 58.26Q62.02 58.05 61.04 57.98L58.99 57.85Q56.18 57.67 54.93 56.66Q53.69 55.64 53.69 53.98Q53.69 52.59 54.49 51.66Q55.28 50.73 56.72 50.27Q58.16 49.8 60.08 49.8Q61.96 49.8 63.41 50.32Q64.86 50.85 65.72 51.79Q66.57 52.74 66.65 54H62.31Q62.26 53.7 61.98 53.49Q61.71 53.27 61.21 53.15Q60.71 53.04 60 53.04Q59.08 53.04 58.56 53.22Q58.04 53.4 58.04 53.82Q58.04 54.1 58.35 54.3Q58.65 54.5 59.53 54.57L61.86 54.71Q63.68 54.83 64.81 55.25Q65.94 55.68 66.46 56.42Q66.99 57.17 66.99 58.27Q66.99 59.64 66.17 60.67Q65.36 61.7 63.89 62.28Q62.42 62.85 60.46 62.85Q58.44 62.85 56.91 62.3Q55.38 61.75 54.53 60.76Q53.67 59.76 53.64 58.45Z" />
     <!-- AI sparkle -->
-    <path android:fillColor="#FFFFFFFF"
-        android:pathData="M73,27 C74,34.5 76.5,37 84,38 C76.5,39 74,41.5 73,49 C72,41.5 69.5,39 62,38 C69.5,37 72,34.5 73,27 Z" />
-    <path android:fillColor="#FFFFE66D"
-        android:pathData="M35,64 C35.5,67.5 36.5,68.5 40,69 C36.5,69.5 35.5,70.5 35,74 C34.5,70.5 33.5,69.5 30,69 C33.5,68.5 34.5,67.5 35,64 Z" />
+    <path android:fillColor="#FF7DD3FC" android:pathData="M68.3,62.55Q68.6,68.7 74.6,69Q68.6,69.3 68.3,75.45Q68,69.3 62,69Q68,68.7 68.3,62.55Z" />
 </vector>

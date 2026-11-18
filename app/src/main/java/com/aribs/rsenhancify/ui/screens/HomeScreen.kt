@@ -152,12 +152,12 @@ fun AppLogo(modifier: Modifier = Modifier) {
         modifier
             .clip(RoundedCornerShape(20.dp))
             .background(
-                Brush.linearGradient(listOf(Color(0xFF8B3DFF), Color(0xFF4F46E5), Color(0xFF06B6D4)))
+                Brush.linearGradient(listOf(Color(0xFF7A3BEE), Color(0xFF4F4FEC), Color(0xFF2B5FEB)))
             )
     ) {
         Image(
             painterResource(R.drawable.ic_launcher_foreground), contentDescription = "Rs Enhancify logo",
-            modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = 1.45f, scaleY = 1.45f)
+            modifier = Modifier.fillMaxSize().graphicsLayer(scaleX = 1.5f, scaleY = 1.5f) // show the 72dp visible area of the 108dp adaptive icon
         )
     }
 }
