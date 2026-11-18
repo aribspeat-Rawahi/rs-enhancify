@@ -1,6 +1,6 @@
 name: Build & Release APK
 
-# Every push to main = new APK.
+# Every push to main = new APK (commit subject = "What's new" shown in the app).
 #  - With signing secrets + RELEASES_REPO_TOKEN: signed release in the public releases repo (+ latest.json)
 #  - Without them: debug-signed TEST build published as a pre-release in this (private) repo
 on:
