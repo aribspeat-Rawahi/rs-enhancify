@@ -1,0 +1,14 @@
+/home/runner/work/rs-enhancify/rs-enhancify/app/build/outputs/apk/release/:
+total 22200
+drwxr-xr-x 3 runner runner     4096 Nov 22 22:39 .
+drwxr-xr-x 3 runner runner     4096 Nov 22 22:39 ..
+-rw-r--r-- 1 runner runner 22713481 Nov 22 22:39 app-release.apk
+drwxr-xr-x 4 runner runner     4096 Nov 22 22:39 baselineProfiles
+-rw-r--r-- 1 runner runner      715 Nov 22 22:39 output-metadata.json
+
+/home/runner/work/rs-enhancify/rs-enhancify/dist:
+total 22196
+drwxr-xr-x  2 runner runner     4096 Nov 22 22:39 .
+drwxr-xr-x 11 runner runner     4096 Nov 22 22:39 ..
+-rw-r--r--  1 runner runner 22713481 Nov 22 22:39 RsEnhancify-1.0.111.apk
+-rw-r--r--  1 runner runner      409 Nov 22 22:39 latest.json
