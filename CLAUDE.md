@@ -1,6 +1,6 @@
 # CLAUDE.md — Rs Enhancify
 
-Offline Android app: AI image upscaler (Real-ESRGAN), JPG→PDF, PDF→JPG, PDF→Word. Native Kotlin + Jetpack Compose, glassmorphism UI. All processing is on-device. Network is used ONLY by the in-app updater (`update/`) — never send user files or analytics anywhere.
+Offline Android app: AI image upscaler (Real-ESRGAN), image compressor, image-to-text (OCR), JPG→PDF, PDF→JPG, PDF→Word, PDF tools (merge/split/organize). Accepts shared photos/PDFs from other apps. Native Kotlin + Jetpack Compose, glassmorphism UI. All processing is on-device. Network is used ONLY by the in-app updater (`update/`) — never send user files or analytics anywhere.
 
 ## Working with the owner
 - Explain in **Bengali (বাংলা)**; code, commands, paths and technical terms in English. Code comments in English.
@@ -17,14 +17,19 @@ Offline Android app: AI image upscaler (Real-ESRGAN), JPG→PDF, PDF→JPG, PDF�
 ## Layout
 ```
 app/src/main/java/com/aribs/rsenhancify/
-  MainActivity.kt            # theme + simple screen navigation
+  MainActivity.kt            # theme, navigation (Tool? + input version), share/open-with intake
   engine/Upscaler.kt         # tiled Real-ESRGAN inference (256px tiles, 16px overlap), GPU crash-guard
   engine/PdfTools.kt         # ImageToPdf, PdfPages (PdfRenderer wrapper), PageRange parser
   engine/PdfToWord.kt        # Editable (PDFBox + OCR fallback) / Exact (page images) modes
   engine/DocxWriter.kt       # minimal OOXML writer (paragraphs, page breaks, full-page images)
   engine/TextReflow.kt       # joins hard-wrapped PDF lines into paragraphs (pure Kotlin)
+  engine/PdfEditor.kt        # PDFBox: merge, organize (reorder/rotate/delete/extract), split each page
+  engine/ImageCompressor.kt  # JPEG target-size (quality binary search, then downscale) / fixed quality
+  engine/Ocr.kt              # ML Kit OCR for images
   ui/components/Glass.kt     # glass design system (background, cards, buttons, segmented, progress)
-  ui/screens/*.kt            # Home, Enhance, ImageToPdf, PdfToImage, PdfToWord
+  ui/screens/Tools.kt        # Tool enum: title, icon, input kind, share limits (drives Home grid + share chooser)
+  ui/screens/ShareChooser.kt # "What do you want to do with these files?" dialog
+  ui/screens/*.kt            # Home, Enhance, Compress, ImageToText, ImageToPdf, PdfToImage, PdfToWord, PdfTools
   util/Files.kt              # decode (EXIF-aware), MediaStore save, open/share
   update/AppUpdater.kt       # latest.json -> in-app download -> sha256 -> system installer (GitHub hosts only, redirects checked)
   update/UpdateDialog.kt     # silent background check (launch, back online, resume >1h); prompt only when newer: "Upgrade now"/"Later" (Later = hide until next launch). No manual check button.
@@ -33,6 +38,7 @@ scripts/convert_model.py     # .pth -> .tflite (no torch needed): python3 conver
 Outputs: images → `Pictures/Rs Enhancify`, PDF/DOCX → `Download/Rs Enhancify`.
 
 ## Rules
+- New tool: add it to `Tool` (Tools.kt), give its screen `initial: List<Uri>`, and wire it in `App()`.
 - Model input is fixed at 1x256x256x3 float32 [0,1] RGB, output 1x1024x1024x3. If you re-export with another tile size, update `Upscaler.TILE`.
 - GPU delegate must be created/used/closed on one thread (all inside `Upscaler.upscale`). Keep the `gpu_init_pending` crash guard.
 - Prefs file: `rs_enhancify_prefs` (`gpu_disabled`, `gpu_init_pending`).

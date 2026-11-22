@@ -19,6 +19,7 @@ import androidx.compose.material.icons.rounded.UploadFile
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -56,7 +57,7 @@ import kotlinx.coroutines.withContext
 private const val DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 
 @Composable
-fun PdfToWordScreen(onBack: () -> Unit) {
+fun PdfToWordScreen(onBack: () -> Unit, initial: List<Uri> = emptyList()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pdfUri by remember { mutableStateOf<Uri?>(null) }
@@ -71,8 +72,7 @@ fun PdfToWordScreen(onBack: () -> Unit) {
     var message by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     val running = job != null
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+    fun openPdf(uri: Uri) {
         savedUri = null; message = null
         scope.launch {
             try {
@@ -86,6 +86,12 @@ fun PdfToWordScreen(onBack: () -> Unit) {
             }
         }
     }
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) openPdf(uri)
+    }
+
+    LaunchedEffect(Unit) { initial.firstOrNull()?.let { openPdf(it) } }
     val pick = { picker.launch(arrayOf("application/pdf")) }
 
     fun convert() {

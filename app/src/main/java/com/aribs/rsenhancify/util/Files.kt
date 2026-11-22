@@ -87,6 +87,38 @@ object Files {
         return uri
     }
 
+    /** Size in bytes of a content Uri, or -1 if unknown. */
+    fun size(context: Context, uri: Uri): Long {
+        runCatching {
+            context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use { c ->
+                if (c.moveToFirst() && !c.isNull(0)) return c.getLong(0)
+            }
+        }
+        return runCatching {
+            context.contentResolver.openAssetFileDescriptor(uri, "r")?.use { it.length } ?: -1L
+        }.getOrDefault(-1L)
+    }
+
+    /** Human readable size, e.g. "184 KB" / "2.4 MB". */
+    fun formatSize(bytes: Long): String = when {
+        bytes < 0 -> "?"
+        bytes < 1024 -> "$bytes B"
+        bytes < 1024 * 1024 -> "${(bytes + 512) / 1024} KB"
+        else -> String.format(Locale.US, "%.1f MB", bytes / 1_048_576.0)
+    }
+
+    /** Save already-encoded image bytes (e.g. a compressed JPEG) to Pictures/Rs Enhancify. */
+    fun saveImageBytes(context: Context, bytes: ByteArray, displayName: String, mime: String = "image/jpeg"): Uri {
+        val ext = if (mime == "image/png") "png" else "jpg"
+        val uri = insertMedia(
+            context,
+            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            "$displayName.$ext", mime, "${Environment.DIRECTORY_PICTURES}/$APP_FOLDER"
+        )
+        writeAndPublish(context, uri) { os -> os.write(bytes) }
+        return uri
+    }
+
     /** Save any document (PDF / DOCX) to Download/Rs Enhancify. */
     fun saveDocument(
         context: Context,

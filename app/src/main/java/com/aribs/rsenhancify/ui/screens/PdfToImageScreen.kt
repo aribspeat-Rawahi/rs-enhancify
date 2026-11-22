@@ -31,6 +31,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -73,7 +74,7 @@ import kotlinx.coroutines.withContext
 private enum class Dpi(val label: String, val dpi: Int) { LOW("Small · 100", 100), MED("Good · 150", 150), HIGH("Sharp · 300", 300) }
 
 @Composable
-fun PdfToImageScreen(onBack: () -> Unit) {
+fun PdfToImageScreen(onBack: () -> Unit, initial: List<Uri> = emptyList()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var pdfUri by remember { mutableStateOf<Uri?>(null) }
@@ -88,8 +89,7 @@ fun PdfToImageScreen(onBack: () -> Unit) {
     var message by remember { mutableStateOf<Pair<String, Boolean>?>(null) }
     val running = job != null
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+    fun openPdf(uri: Uri) {
         saved.clear(); message = null; range = ""
         scope.launch {
             try {
@@ -103,6 +103,12 @@ fun PdfToImageScreen(onBack: () -> Unit) {
             }
         }
     }
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) openPdf(uri)
+    }
+
+    LaunchedEffect(Unit) { initial.firstOrNull()?.let { openPdf(it) } }
 
     fun convert() {
         val uri = pdfUri ?: return

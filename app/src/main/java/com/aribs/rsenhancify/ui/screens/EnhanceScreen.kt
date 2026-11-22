@@ -32,6 +32,7 @@ import androidx.compose.material.icons.rounded.SwapHoriz
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -93,7 +94,7 @@ private fun previewOf(b: Bitmap, maxSide: Int = 1600): Bitmap {
 }
 
 @Composable
-fun EnhanceScreen(onBack: () -> Unit) {
+fun EnhanceScreen(onBack: () -> Unit, initial: List<Uri> = emptyList()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val upscaler = remember { Upscaler(context.applicationContext) }
@@ -124,8 +125,7 @@ fun EnhanceScreen(onBack: () -> Unit) {
         result = null; resultPreview = null; beforeImg = null; savedUri = null; resultInfo = ""
     }
 
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
+    fun loadSource(uri: Uri) {
         clearResult()
         message = null
         srcUri = uri
@@ -149,6 +149,12 @@ fun EnhanceScreen(onBack: () -> Unit) {
             }
         }
     }
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) loadSource(uri)
+    }
+
+    LaunchedEffect(Unit) { initial.firstOrNull()?.let { loadSource(it) } }
 
     fun start() {
         val uri = srcUri ?: return

@@ -31,6 +31,7 @@ import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -79,7 +80,7 @@ private enum class PdfQuality(val label: String, val maxSide: Int) {
 }
 
 @Composable
-fun ImageToPdfScreen(onBack: () -> Unit) {
+fun ImageToPdfScreen(onBack: () -> Unit, initial: List<Uri> = emptyList()) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val images = remember { mutableStateListOf<Uri>() }
@@ -100,6 +101,8 @@ fun ImageToPdfScreen(onBack: () -> Unit) {
         }
     }
     fun pick() = picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+
+    LaunchedEffect(Unit) { if (initial.isNotEmpty()) images.addAll(initial.filter { it !in images }) }
 
     fun create() {
         if (images.isEmpty()) return
@@ -237,7 +240,7 @@ private fun PageRow(
 }
 
 @Composable
-private fun SmallIcon(icon: ImageVector, enabled: Boolean, onClick: () -> Unit) {
+fun SmallIcon(icon: ImageVector, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier
             .padding(start = 4.dp)
